@@ -17,12 +17,21 @@ android {
         versionName = "0.6.0"
     }
 
+    // 签名配置：CI 走环境变量（Actions Secrets）；本地开发读仓库根目录 keystore.properties（gitignored）
+    val keystoreProps = java.util.Properties().apply {
+        val f = rootProject.file("keystore.properties")
+        if (f.exists()) f.inputStream().use { load(it) }
+    }
+    val storePasswordEnv = System.getenv("CALM_STORE_PASSWORD") ?: keystoreProps.getProperty("storePassword")
+    val keyAliasEnv = System.getenv("CALM_KEY_ALIAS") ?: keystoreProps.getProperty("keyAlias")
+    val keyPasswordEnv = System.getenv("CALM_KEY_PASSWORD") ?: keystoreProps.getProperty("keyPassword")
+
     signingConfigs {
         create("release") {
             storeFile = rootProject.file("release.keystore")
-            storePassword = "calm2026"
-            keyAlias = "calm"
-            keyPassword = "calm2026"
+            storePassword = storePasswordEnv ?: ""
+            keyAlias = keyAliasEnv ?: ""
+            keyPassword = keyPasswordEnv ?: ""
         }
     }
 

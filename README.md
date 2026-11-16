@@ -11,11 +11,11 @@
 push `main` 自动触发 GitHub Actions，产物 artifact：`calm-apk`。
 本地无需 Android SDK，全部依赖 CI 构建。
 
-## 签名（私有仓库内管理，严禁删除/更换/改密码）
+## 签名（密钥不入库，CI 通过 Secrets 注入；严禁删除/更换/改密码）
 
-- keystore：仓库根目录 `release.keystore`（PKCS12）
-- alias：`calm`
-- store / key 密码：`calm2026`
+- keystore：仓库外本地保存；CI 构建时由 GitHub Actions Secret `CALM_KEYSTORE_BASE64` 解码生成
+- 密码：存于 Actions Secrets（`CALM_STORE_PASSWORD` / `CALM_KEY_PASSWORD` / `CALM_KEY_ALIAS`）
+- 本地开发：将 `release.keystore` 放回仓库根目录即可（已被 .gitignore 忽略，不会提交）
 
 ## 版本规则
 
