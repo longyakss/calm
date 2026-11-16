@@ -13,8 +13,8 @@ android {
         applicationId = "com.calm.app"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.5.0"
     }
 
     signingConfigs {
@@ -56,6 +56,12 @@ android {
 dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:settings"))
+    implementation(project(":data:local"))
+    implementation(project(":core:downloader"))
+    implementation(project(":core:browser"))
+    implementation(project(":core:filemanager"))
+    implementation(project(":core:player"))
+    implementation(project(":core:reader"))
 
     implementation(platform("androidx.compose:compose-bom:2023.10.01"))
     implementation("androidx.compose.ui:ui")
@@ -71,4 +77,5 @@ dependencies {
 
     implementation("com.google.dagger:hilt-android:2.48")
     kapt("com.google.dagger:hilt-compiler:2.48")
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 }
