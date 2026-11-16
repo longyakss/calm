@@ -37,7 +37,7 @@ class DownloadService : Service() {
                 val speed = active.sumOf { it.speed }
                 val first = active.firstOrNull()
                 val text = if (active.isEmpty()) "下载服务运行中" else "${active.size} 个任务 · ${Fmt.speed(speed)}"
-                val p = first?.value
+                val p = first
                 updateNotification(text, p?.downloaded ?: 0, p?.total ?: 0, if (active.isEmpty()) 0 else 1)
             }
         }
