@@ -120,24 +120,43 @@ class BookshelfViewModel @Inject constructor(
     }
 }
 
-/** 阅读排版偏好（TH-010：独立存储，SharedPreferences JSON）。 */
+/** 阅读排版偏好（TH-010：独立存储，SharedPreferences）。 */
 class ReaderPrefs @Inject constructor(@dagger.hilt.android.qualifiers.ApplicationContext private val context: Context) {
 
     private val sp = context.getSharedPreferences("reader_settings", Context.MODE_PRIVATE)
 
-    var textSize by mutableStateOf(sp.getInt("textSize", 18))
-        private set
-    var lineSpacing by mutableStateOf(sp.getFloat("lineSpacing", 1.5f))
-        private set
-    var paragraphSpacing by mutableStateOf(sp.getFloat("paragraphSpacing", 1.0f))
-        private set
-    var indent by mutableStateOf(sp.getBoolean("indent", true))
-        private set
+    private val textSizeState = mutableStateOf(sp.getInt("textSize", 18))
+    private val lineSpacingState = mutableStateOf(sp.getFloat("lineSpacing", 1.5f))
+    private val paragraphSpacingState = mutableStateOf(sp.getFloat("paragraphSpacing", 1.0f))
+    private val indentState = mutableStateOf(sp.getBoolean("indent", true))
 
-    fun setTextSize(v: Int) { textSize = v.coerceIn(12, 32); sp.edit().putInt("textSize", textSize).apply() }
-    fun setLineSpacing(v: Float) { lineSpacing = v.coerceIn(1.0f, 2.5f); sp.edit().putFloat("lineSpacing", lineSpacing).apply() }
-    fun setParagraphSpacing(v: Float) { paragraphSpacing = v.coerceIn(0.5f, 2.0f); sp.edit().putFloat("paragraphSpacing", paragraphSpacing).apply() }
-    fun setIndent(v: Boolean) { indent = v; sp.edit().putBoolean("indent", indent).apply() }
+    val textSize: Int get() = textSizeState.value
+    val lineSpacing: Float get() = lineSpacingState.value
+    val paragraphSpacing: Float get() = paragraphSpacingState.value
+    val indent: Boolean get() = indentState.value
+
+    fun setTextSize(v: Int) {
+        val c = v.coerceIn(12, 32)
+        textSizeState.value = c
+        sp.edit().putInt("textSize", c).apply()
+    }
+
+    fun setLineSpacing(v: Float) {
+        val c = v.coerceIn(1.0f, 2.5f)
+        lineSpacingState.value = c
+        sp.edit().putFloat("lineSpacing", c).apply()
+    }
+
+    fun setParagraphSpacing(v: Float) {
+        val c = v.coerceIn(0.5f, 2.0f)
+        paragraphSpacingState.value = c
+        sp.edit().putFloat("paragraphSpacing", c).apply()
+    }
+
+    fun setIndent(v: Boolean) {
+        indentState.value = v
+        sp.edit().putBoolean("indent", v).apply()
+    }
 
     // ---- 净化 / 替换规则（NR-018/019/021，per-book）----
 
