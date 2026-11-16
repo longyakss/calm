@@ -203,7 +203,7 @@ fun FileManagerScreen(
             items(shown, key = { it.absolutePath }) { f ->
                 FileRow(
                     file = f,
-                    checked = vm.selectionMode && f.absolutePath in vm.selected,
+                    checked = vm.selectionMode && f.absolutePath in vm.selected.value,
                     onClick = {
                         if (vm.selectionMode) {
                             vm.toggleSelect(f)
@@ -270,7 +270,7 @@ fun FileManagerScreen(
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
                 TextButton(onClick = { vm.paste() }) { Text("粘贴到这里") }
-                IconButton(onClick = { vm.clipboardPaths = emptyList() }) {
+                IconButton(onClick = { vm.clearClipboard() }) {
                     Icon(Icons.Filled.Close, contentDescription = "取消")
                 }
             }

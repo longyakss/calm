@@ -138,6 +138,10 @@ class FileManagerViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    fun clearClipboard() {
+        clipboardPaths = emptyList()
+    }
+
     private fun copyRecursive(src: File, targetDir: File, move: Boolean) {
         if (src.isDirectory) {
             val dst = File(targetDir, src.name)

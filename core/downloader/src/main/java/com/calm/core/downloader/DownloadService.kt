@@ -35,7 +35,7 @@ class DownloadService : Service() {
             controller.progress.collectLatest { map ->
                 val active = map.values
                 val speed = active.sumOf { it.speed }
-                val first = active.entries.firstOrNull()
+                val first = active.firstOrNull()
                 val text = if (active.isEmpty()) "下载服务运行中" else "${active.size} 个任务 · ${Fmt.speed(speed)}"
                 val p = first?.value
                 updateNotification(text, p?.downloaded ?: 0, p?.total ?: 0, if (active.isEmpty()) 0 else 1)
@@ -45,7 +45,7 @@ class DownloadService : Service() {
             controller.events.collectLatest { msg ->
                 if (msg != null) {
                     notifyDone(msg)
-                    controller.events.value = null
+                    controller.consumeEvent()
                 }
             }
         }

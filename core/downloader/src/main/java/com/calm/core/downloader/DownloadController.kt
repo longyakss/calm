@@ -69,6 +69,10 @@ class DownloadController @javax.inject.Inject constructor(
     private val _events = MutableStateFlow<String?>(null)
     val events: StateFlow<String?> = _events
 
+    fun consumeEvent() {
+        _events.value = null
+    }
+
     suspend fun enqueue(url: String, fileName: String, threadCount: Int, mimeType: String?, pageUrl: String?): String {
         val id = DownloadIds.newId()
         val safeName = NameUtil.sanitize(fileName)
@@ -200,7 +204,7 @@ class DownloadController @javax.inject.Inject constructor(
             .header("User-Agent", "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36")
             .build()
         var downloaded = 0L
-        client.newCall(req).await().body.byteStream().use { input ->
+        client.newCall(req).await().body!!.byteStream().use { input ->
             part.outputStream().use { out ->
                 val buf = ByteArray(DEFAULT_BUF)
                 while (true) {
@@ -236,7 +240,7 @@ class DownloadController @javax.inject.Inject constructor(
                         .header("Range", "bytes=$pos-${segEnd - 1}")
                         .header("User-Agent", "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36")
                         .build()
-                    client.newCall(req).await().body.byteStream().use { input ->
+                    client.newCall(req).await().body!!.byteStream().use { input ->
                         RandomAccessFile(part, "rwd").use { raf ->
                             raf.seek(pos)
                             val buf = ByteArray(DEFAULT_BUF)
@@ -253,7 +257,7 @@ class DownloadController @javax.inject.Inject constructor(
                     }
                 }
             }
-        }.join()
+        }
         return chunks.sum()
     }
 

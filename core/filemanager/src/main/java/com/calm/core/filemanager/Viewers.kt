@@ -1,17 +1,12 @@
 package com.calm.core.filemanager
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,17 +17,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -106,7 +101,7 @@ fun TextViewerScreen(path: String) {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    androidx.compose.foundation.layout.Column(modifier = Modifier.fillMaxSize()) {
         Text(
             path.substringAfterLast('/'),
             style = MaterialTheme.typography.titleSmall,
@@ -143,7 +138,7 @@ private fun decodeText(bytes: ByteArray): String = try {
 /** PDF 查看器：PdfRenderer 顺序渲染（FM-006）。 */
 @Composable
 fun PdfViewerScreen(path: String) {
-    val pages = remember { androidx.compose.runtime.mutableStateListOf<Bitmap>() }
+    val pages = remember { mutableStateListOf<Bitmap>() }
     var error by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(path) {
@@ -154,7 +149,7 @@ fun PdfViewerScreen(path: String) {
                         for (i in 0 until renderer.pageCount) {
                             val page = renderer.openPage(i)
                             val bmp = Bitmap.createBitmap(page.width * 2, page.height * 2, Bitmap.Config.ARGB_8888)
-                            bmp.eraseColor(Color.WHITE)
+                            bmp.eraseColor(android.graphics.Color.WHITE)
                             page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
                             page.close()
                             pages.add(bmp)
@@ -176,7 +171,11 @@ fun PdfViewerScreen(path: String) {
         return
     }
 
-    LazyColumn(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant)) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+    ) {
         itemsIndexed(pages) { index, bmp ->
             Image(
                 bitmap = bmp.asImageBitmap(),
