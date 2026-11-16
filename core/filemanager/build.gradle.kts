@@ -31,6 +31,7 @@ android {
 
 dependencies {
     implementation(project(":core:common"))
+    implementation(project(":data:local"))
 
     implementation(platform("androidx.compose:compose-bom:2023.10.01"))
     implementation("androidx.compose.ui:ui")

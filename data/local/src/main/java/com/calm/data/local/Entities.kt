@@ -30,6 +30,8 @@ data class BookmarkEntity(
     val title: String,
     val url: String,
     val folder: String,
+    /** 是否添加到主页快捷访问 */
+    val inHome: Boolean = false,
     val createdAt: Long,
 )
 
@@ -59,4 +61,13 @@ data class BookEntity(
     val progressOffset: Int,
     val addedAt: Long,
     val lastReadAt: Long,
+)
+
+/** 操作日志（BR-001/003：仅保留最近 24 小时）。 */
+@Entity(tableName = "app_log")
+data class LogEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val time: Long,
+    val tag: String,
+    val message: String,
 )

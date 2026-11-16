@@ -45,6 +45,13 @@ private val tabs = listOf(
     TabItem("bookshelf", "书架", Icons.Filled.MenuBook),
 )
 
+/** 查看器路径中转：避免带分隔符的路径走导航参数（曾导致点击文件崩溃）。 */
+object ViewerPaths {
+    var image: String = ""
+    var text: String = ""
+    var pdf: String = ""
+}
+
 @Composable
 fun CalmRoot(onThemeChanged: (Int, Int) -> Unit) {
     val navController = rememberNavController()
@@ -93,25 +100,29 @@ fun CalmRoot(onThemeChanged: (Int, Int) -> Unit) {
             composable("files") {
                 FileManagerScreen(
                     onOpenImage = { path ->
-                        navController.navigate("image/${Uri.encode(path)}")
+                        ViewerPaths.image = path
+                        navController.navigate("image")
                     },
                     onOpenText = { path ->
-                        navController.navigate("text/${Uri.encode(path)}")
+                        ViewerPaths.text = path
+                        navController.navigate("text")
                     },
                     onOpenPdf = { path ->
-                        navController.navigate("pdf/${Uri.encode(path)}")
+                        ViewerPaths.pdf = path
+                        navController.navigate("pdf")
                     },
                 )
             }
             composable("bookshelf") {
                 BookshelfScreen(onOpenBook = { id -> navController.navigate("reader/$id") })
             }
-
             composable("settings") {
                 SettingsScreen(
                     onThemeChanged = onThemeChanged,
                     onOpenKeepAlive = { navController.navigate("keepalive") },
                     onOpenReaderSettings = { navController.navigate("readersettings") },
+                    onOpenLogs = { navController.navigate("logs") },
+                    onOpenGitHub = { navController.navigate("github") },
                 )
             }
             composable("keepalive") {
@@ -122,6 +133,12 @@ fun CalmRoot(onThemeChanged: (Int, Int) -> Unit) {
                 val prefs = androidx.compose.runtime.remember { com.calm.core.reader.ReaderPrefs(ctx) }
                 com.calm.core.reader.ReaderSettingsScreen(prefs = prefs, onBack = { navController.popBackStack() })
             }
+            composable("logs") {
+                com.calm.core.settings.LogScreen(onBack = { navController.popBackStack() })
+            }
+            composable("github") {
+                com.calm.core.settings.GitHubScreen(onBack = { navController.popBackStack() })
+            }
             composable("reader/{bookId}") { entry ->
                 val bookId = entry.arguments?.getString("bookId")?.toLongOrNull() ?: return@composable
                 ReaderScreen(
@@ -129,18 +146,9 @@ fun CalmRoot(onThemeChanged: (Int, Int) -> Unit) {
                     onBack = { navController.popBackStack() },
                 )
             }
-            composable("image/{path}") { entry ->
-                val path = entry.arguments?.getString("path")?.let { Uri.decode(it) } ?: return@composable
-                ImageViewerScreen(path)
-            }
-            composable("text/{path}") { entry ->
-                val path = entry.arguments?.getString("path")?.let { Uri.decode(it) } ?: return@composable
-                TextViewerScreen(path)
-            }
-            composable("pdf/{path}") { entry ->
-                val path = entry.arguments?.getString("path")?.let { Uri.decode(it) } ?: return@composable
-                PdfViewerScreen(path)
-            }
+            composable("image") { ImageViewerScreen(ViewerPaths.image) }
+            composable("text") { TextViewerScreen(ViewerPaths.text) }
+            composable("pdf") { PdfViewerScreen(ViewerPaths.pdf) }
         }
     }
 }

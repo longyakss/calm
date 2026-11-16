@@ -51,6 +51,7 @@ suspend fun Call.await(): Response = suspendCancellableCoroutine { cont ->
 class DownloadController @javax.inject.Inject constructor(
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context,
     private val dao: DownloadDao,
+    private val logStore: com.calm.data.local.LogStore,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -122,14 +123,24 @@ class DownloadController @javax.inject.Inject constructor(
         }
     }
 
-    suspend fun saveDir(category: Category): File {
-        val base = if (Environment.isExternalStorageManager()) {
-            File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), category.dir)
-        } else {
-            File(context.getExternalFilesDir(null), "Download/${category.dir}")
-        }
-        return base
+    /**
+     * 保存目录：默认公共下载目录 /storage/emulated/0/Download/<分类>；
+     * 无「所有文件访问」权限导致不可写时，探测失败回退应用专属目录（用户授权后自动恢复公共目录）。
+     */
+    fun saveDir(category: Category): File {
+        val pub = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), category.dir)
+        if (isWritable(pub)) return pub
+        val fallback = File(context.getExternalFilesDir(null), "Download/${category.dir}")
+        fallback.mkdirs()
+        return fallback
     }
+
+    private fun isWritable(dir: File): Boolean = runCatching {
+        dir.mkdirs()
+        if (!dir.isDirectory) return false
+        val probe = File(dir, ".calm_probe_${System.currentTimeMillis()}")
+        probe.createNewFile() && probe.delete()
+    }.getOrDefault(false)
 
     private fun dedupeName(dir: File, name: String): String {
         var candidate = name
@@ -182,6 +193,7 @@ class DownloadController @javax.inject.Inject constructor(
             }
             dao.updateStatus(id, "completed")
             dao.updateProgress(id, part.length(), chunks.joinToString(","))
+            logStore.log("下载", "完成：${task.fileName}")
             _events.value = "下载完成：${task.fileName}"
         } catch (e: CancellationException) {
             try {
@@ -192,6 +204,7 @@ class DownloadController @javax.inject.Inject constructor(
         } catch (e: Exception) {
             try {
                 dao.updateStatus(id, "failed")
+                logStore.log("下载", "失败：${task.fileName} ${e.message ?: "网络错误"}")
                 _events.value = "下载失败：${e.message ?: "网络错误"}"
             } catch (_: Exception) {}
         } finally {

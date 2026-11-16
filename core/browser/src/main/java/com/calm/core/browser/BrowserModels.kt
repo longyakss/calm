@@ -97,3 +97,14 @@ const val NIGHT_CSS_JS =
         "s.textContent='html{filter:invert(1) hue-rotate(180deg)!important}" +
         "img,video,canvas,iframe,svg,picture{filter:invert(1) hue-rotate(180deg)!important}';" +
         "document.head.appendChild(s);})()"
+
+const val DESKTOP_UA =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+const val HOME_URL = "calm://home"
+
+/** 需要桌面 UA 才能正常展示的站点（实测适配：B 站移动页在 WebView 内无法正常播放）。 */
+fun needsDesktopUa(url: String): Boolean {
+    val h = UrlUtil.hostOf(url)
+    return h.contains("bilibili.com") || h.contains("b23.tv")
+}

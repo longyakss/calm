@@ -28,20 +28,22 @@ import com.calm.core.common.theme.ThemeStore
 private data class SettingsSection(val title: String, val items: List<String>)
 
 private val sections = listOf(
-    SettingsSection("浏览器", listOf("搜索引擎管理", "书签与历史", "广告拦截", "脚本管理", "浏览器夜间模式")),
+    SettingsSection("浏览器", listOf("搜索引擎管理", "书签与历史", "广告拦截", "GitHub 辅助访问", "浏览器夜间模式")),
     SettingsSection("下载", listOf("下载设置", "保存位置")),
     SettingsSection("阅读", listOf("阅读器设置", "皮肤主题库", "文本替换规则")),
     SettingsSection("视频", listOf("播放器设置")),
     SettingsSection("隐私与安全", listOf("密码管理器", "隐私设置", "清除数据")),
-    SettingsSection("系统", listOf("防杀设置（后台保护）", "自动更新", "关于")),
+    SettingsSection("系统", listOf("防杀设置（后台保护）", "操作日志", "自动更新", "关于")),
 )
 
-/** 设置页（对应设计方案 5.15）。已实装：主题色/外观模式/防杀/阅读器设置/播放器提示。 */
+/** 设置页（对应设计方案 5.15）。已实装：主题色/外观模式/防杀/日志/GitHub 辅助/阅读器设置。 */
 @Composable
 fun SettingsScreen(
     onThemeChanged: (Int, Int) -> Unit = { _, _ -> },
     onOpenKeepAlive: () -> Unit = {},
     onOpenReaderSettings: () -> Unit = {},
+    onOpenLogs: () -> Unit = {},
+    onOpenGitHub: () -> Unit = {},
 ) {
     var presetIdx by remember { mutableIntStateOf(ThemeStore.presetIndex) }
     var appearance by remember { mutableIntStateOf(ThemeStore.appearance) }
@@ -130,7 +132,8 @@ fun SettingsScreen(
                 )
             }
             items(section.items) { label ->
-                val clickable = label.startsWith("防杀") || label == "阅读器设置"
+                val clickable = label.startsWith("防杀") || label == "阅读器设置" ||
+                    label == "操作日志" || label == "GitHub 辅助访问"
                 Text(
                     text = label + if (clickable) "  ›" else "",
                     style = MaterialTheme.typography.bodyLarge,
@@ -141,12 +144,14 @@ fun SettingsScreen(
                                 when {
                                     label.startsWith("防杀") -> onOpenKeepAlive()
                                     label == "阅读器设置" -> onOpenReaderSettings()
+                                    label == "操作日志" -> onOpenLogs()
+                                    label == "GitHub 辅助访问" -> onOpenGitHub()
                                 }
                             } else Modifier,
                         )
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                 )
-                androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.outlineVariant)
+                Divider(color = MaterialTheme.colorScheme.outlineVariant)
             }
         }
     }

@@ -2,12 +2,10 @@ package com.calm.core.browser
 
 /**
  * 网页阅读模式（BR-021）：JS 正文提取 + 排版净化。
- * 简化版 readability：取 DOM 中文本密度最高的容器，剥离脚本/样式/导航。
+ * 提取正文时按 DOM 顺序保留段落与配图（图片不丢失），由 Compose 层渲染。
  */
 object ReaderModeJs {
 
-    /** 注入后调用 window.__calmReaderOut 拿不到返回值，故用 console 或 JS 接口回传；
-     *  这里约定：evaluateJavascript 的返回值直接是 JSON 字符串。 */
     const val EXTRACT = """
         (function(){
           function pick(root){
@@ -29,37 +27,59 @@ object ReaderModeJs {
           }
           var el = pick(document);
           if(!el){ return JSON.stringify({ok:false}); }
-          el.querySelectorAll('script,style,nav,header,footer,aside,iframe,form,button').forEach(function(n){ n.remove(); });
+          // 只剥离影响排版的节点；图片保留（配图不能丢）
+          el.querySelectorAll('script,style,nav,header,footer,aside,form,button').forEach(function(n){ n.remove(); });
           var title = (document.querySelector('h1') || {textContent: document.title}).textContent.trim();
-          var paras = [];
-          el.querySelectorAll('p, h2, h3').forEach(function(p){
-            var t = p.innerText.trim();
-            if(t.length > 1) paras.push(t);
+          var items = [];
+          // 按文档顺序遍历段落与图片
+          var nodes = el.querySelectorAll('p, h2, h3, img');
+          var addedImgs = {};
+          nodes.forEach(function(n){
+            if(n.tagName === 'IMG'){
+              var src = n.currentSrc || n.src || n.getAttribute('data-src') || '';
+              if(src && src.indexOf('http') === 0 && !addedImgs[src]){
+                addedImgs[src] = 1;
+                items.push({t:'img', v:src});
+              }
+            } else {
+              var txt = n.innerText.trim();
+              if(txt.length > 1) items.push({t:'text', v:txt});
+            }
           });
-          if(paras.length === 0){
-            el.innerText.split('\n').forEach(function(t){ if(t.trim().length > 1) paras.push(t.trim()); });
+          if(items.length === 0 && el.innerText){
+            el.innerText.split('\n').forEach(function(t){ if(t.trim().length > 1) items.push({t:'text', v:t.trim()}); });
           }
-          return JSON.stringify({ok:true, title:title, paras:paras.slice(0, 2000)});
+          return JSON.stringify({ok:true, title:title, items:items.slice(0, 2000)});
         })();
     """
 
-    data class Result(val ok: Boolean, val title: String, val paras: List<String>) {
+    sealed class Item {
+        data class Text(val value: String) : Item()
+        data class Image(val url: String) : Item()
+    }
+
+    data class Result(val ok: Boolean, val title: String, val items: List<Item>) {
         companion object {
             fun fromJson(raw: String): Result {
                 return try {
-                    val o = org.json.JSONObject(
-                        raw.trim().removePrefix("\"").removeSuffix("\"")
-                            .replace("\\\"", "\"").replace("\\\\", "\\"),
-                    )
+                    val json = raw.trim()
+                        .removePrefix("\"").removeSuffix("\"")
+                        .replace("\\\"", "\"").replace("\\\\", "\\")
+                    val o = org.json.JSONObject(json)
                     if (!o.optBoolean("ok")) Result(false, "", emptyList())
-                    else Result(
-                        true,
-                        o.optString("title"),
-                        buildList {
-                            val arr = o.optJSONArray("paras")
-                            if (arr != null) for (i in 0 until arr.length()) add(arr.getString(i))
-                        },
-                    )
+                    else {
+                        val arr = o.optJSONArray("items") ?: org.json.JSONArray()
+                        val items = mutableListOf<Item>()
+                        for (i in 0 until arr.length()) {
+                            val e = arr.getJSONObject(i)
+                            if (e.optString("t") == "img") {
+                                items.add(Item.Image(e.optString("v")))
+                            } else {
+                                items.add(Item.Text(e.optString("v")))
+                            }
+                        }
+                        Result(true, o.optString("title"), items)
+                    }
                 } catch (_: Exception) {
                     Result(false, "", emptyList())
                 }

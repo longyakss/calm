@@ -45,11 +45,18 @@ interface BookmarkDao {
     @Query("SELECT * FROM bookmark ORDER BY createdAt DESC")
     fun observeAll(): Flow<List<BookmarkEntity>>
 
+    /** 主页快捷访问（用户勾选「添加到主页」的书签）。 */
+    @Query("SELECT * FROM bookmark WHERE inHome = 1 ORDER BY createdAt DESC")
+    fun observeHome(): Flow<List<BookmarkEntity>>
+
     @Query("SELECT EXISTS(SELECT 1 FROM bookmark WHERE url = :url)")
     suspend fun exists(url: String): Boolean
 
     @Query("DELETE FROM bookmark WHERE url = :url")
     suspend fun deleteByUrl(url: String)
+
+    @Query("UPDATE bookmark SET title = :title, folder = :folder, inHome = :inHome WHERE url = :url")
+    suspend fun updateByUrl(url: String, title: String, folder: String, inHome: Boolean)
 }
 
 @Dao
@@ -83,4 +90,22 @@ interface BookDao {
 
     @Query("DELETE FROM book WHERE id = :id")
     suspend fun delete(id: Long)
+}
+
+@Dao
+interface LogDao {
+    @Insert
+    suspend fun insert(log: LogEntity)
+
+    /** 最新在前，最多 500 条（BR-001）。 */
+    @Query("SELECT * FROM app_log ORDER BY time DESC, id DESC LIMIT 500")
+    fun observeAll(): Flow<List<LogEntity>>
+
+    /** 清理 24 小时前的日志（BR-003，启动时调用）。 */
+    @Query("DELETE FROM app_log WHERE time < :ts")
+    suspend fun purgeBefore(ts: Long)
+
+    /** 全部清除。 */
+    @Query("DELETE FROM app_log")
+    suspend fun clearAll()
 }

@@ -13,7 +13,13 @@ import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
-class FileManagerViewModel @Inject constructor() : ViewModel() {
+class FileManagerViewModel @Inject constructor(
+    private val logStore: com.calm.data.local.LogStore,
+) : ViewModel() {
+
+    fun logError(message: String) {
+        logStore.log("文件", message)
+    }
 
     var path by mutableStateOf(rootDir().absolutePath)
         private set

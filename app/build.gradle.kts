@@ -15,8 +15,8 @@ android {
         applicationId = "com.calm.app"
         minSdk = 24
         targetSdk = 34
-        versionCode = 3
-        versionName = "0.6.0"
+        versionCode = 4
+        versionName = "0.2.0"
     }
 
     // 签名配置：CI 走环境变量（Actions Secrets）；本地开发读仓库根目录 keystore.properties（gitignored）

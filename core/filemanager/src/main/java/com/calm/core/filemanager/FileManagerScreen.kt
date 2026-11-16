@@ -385,20 +385,30 @@ private fun openFile(
     onOpenPdf: (String) -> Unit,
     context: android.content.Context,
 ) {
-    when (FileTypes.kindOf(f)) {
-        FileKind.FOLDER -> vm.enter(f)
-        FileKind.IMAGE -> onOpenImage(f.absolutePath)
-        FileKind.TEXT -> onOpenText(f.absolutePath)
-        FileKind.PDF -> onOpenPdf(f.absolutePath)
-        else -> {
-            // 视频 / 音频 → 走系统解析（Calm 播放器注册了对应 intent-filter）；其余交给系统
-            val uri = FileProvider.getUriForFile(context, "com.calm.app.fileprovider", f)
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, FileTypes.mimeOf(f))
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        when (FileTypes.kindOf(f)) {
+            FileKind.FOLDER -> vm.enter(f)
+            FileKind.IMAGE -> onOpenImage(f.absolutePath)
+            FileKind.TEXT -> onOpenText(f.absolutePath)
+            FileKind.PDF -> onOpenPdf(f.absolutePath)
+            else -> {
+                // 视频 / 音频 → 走系统解析（Calm 播放器注册了对应 intent-filter）；其余交给系统
+                val uri = FileProvider.getUriForFile(context, "com.calm.app.fileprovider", f)
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, FileTypes.mimeOf(f))
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                runCatching { context.startActivity(intent) }
+                    .onFailure {
+                        android.widget.Toast.makeText(context, "无法打开：${f.name}", android.widget.Toast.LENGTH_SHORT).show()
+                        vm.logError("打开失败：${f.absolutePath} ${it.message}")
+                    }
             }
-            runCatching { context.startActivity(intent) }
         }
+    } catch (e: Exception) {
+        // 兜底：任何打开异常都不允许崩溃（只提示 + 记日志）
+        android.widget.Toast.makeText(context, "打开出错：${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+        vm.logError("打开异常：${f.absolutePath} ${e.message}")
     }
 }
 
