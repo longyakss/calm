@@ -161,6 +161,15 @@ fun BrowserScreen(vm: BrowserViewModel = hiltViewModel(), onOpenSettings: () -> 
                         trailingIcon = { Switch(checked = vm.nightMode, onCheckedChange = { vm.applyNightMode(it) }) },
                     )
                     DropdownMenuItem(
+                        text = { Text("广告拦截（已拦 ${vm.adBlocker.blockedCount}）") },
+                        onClick = { vm.toggleAdBlock(); menuOpen = false },
+                        trailingIcon = { Switch(checked = vm.adBlocker.enabled, onCheckedChange = { vm.toggleAdBlock(); menuOpen = false }) },
+                    )
+                    DropdownMenuItem(
+                        text = { Text("阅读模式") },
+                        onClick = { vm.openReaderMode(); menuOpen = false },
+                    )
+                    DropdownMenuItem(
                         text = { Text("新建标签页") },
                         onClick = { vm.newTab(null); menuOpen = false },
                         leadingIcon = { Icon(Icons.Filled.Add, contentDescription = null) },
@@ -372,6 +381,36 @@ fun BrowserScreen(vm: BrowserViewModel = hiltViewModel(), onOpenSettings: () -> 
         }
     }
 
+    // ---- 阅读模式全屏面板（BR-021）----
+    vm.readerResult?.let { result ->
+        ModalBottomSheet(onDismissRequest = { vm.closeReaderMode() }) {
+            if (!result.ok) {
+                Box(modifier = Modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) {
+                    Text("未能识别正文，可尝试手动选区（后续版本）", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            } else {
+                Text(
+                    result.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                )
+                LazyColumn(modifier = Modifier.fillMaxWidth().height(560.dp)) {
+                    items(result.paras) { para ->
+                        Text(
+                            para,
+                            style = MaterialTheme.typography.bodyLarge,
+                            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.6f,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 6.dp),
+                        )
+                    }
+                    item { Spacer(Modifier.height(32.dp)) }
+                }
+            }
+        }
+    }
+
     // ---- 下载确认弹窗（对应设计方案 5.6） ----
     vm.pendingDownload?.let { pd ->
         com.calm.core.downloader.DownloadConfirmDialog(
@@ -516,6 +555,7 @@ private fun BrowserHome(history: List<HistoryEntity>, onOpen: (String) -> Unit, 
 private fun configureWebView(w: WebView, tabId: String, vm: BrowserViewModel) {
     if (w.tag == "configured") return
     w.tag = "configured"
+    vm.loadAdBlockPref()
     w.addJavascriptInterface(
         object {
             @android.webkit.JavascriptInterface
@@ -527,6 +567,8 @@ private fun configureWebView(w: WebView, tabId: String, vm: BrowserViewModel) {
     )
     w.webViewClient = object : WebViewClient() {
         override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
+            // 广告拦截优先（BR-017）
+            vm.adBlocker.intercept(view, request)?.let { return it }
             val url = request.url.toString()
             val mime = request.requestHeaders["Accept"]
             vm.addSniffed(url, mime)

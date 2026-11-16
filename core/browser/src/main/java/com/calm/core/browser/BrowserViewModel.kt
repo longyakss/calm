@@ -27,9 +27,14 @@ class BrowserViewModel @Inject constructor(
     @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context,
     val webViews: WebViewPool,
     val downloader: com.calm.core.downloader.DownloadController,
+    val adBlocker: AdBlocker,
     private val bookmarkDao: BookmarkDao,
     private val historyDao: HistoryDao,
 ) : ViewModel() {
+
+    /** 阅读模式提取结果（null = 未开启）。 */
+    var readerResult by mutableStateOf<ReaderModeJs.Result?>(null)
+        private set
 
     val tabs = mutableStateListOf<BrowserTab>()
     var currentTabId by mutableStateOf<String?>(null)
@@ -218,6 +223,32 @@ class BrowserViewModel @Inject constructor(
 
     fun clearHistory() {
         viewModelScope.launch { historyDao.clear() }
+    }
+
+    /** 广告拦截开关（持久化）。 */
+    fun toggleAdBlock() {
+        val v = !adBlocker.enabled
+        adBlocker.setEnabled(v)
+        appContext.getSharedPreferences("browser_settings", android.content.Context.MODE_PRIVATE)
+            .edit().putBoolean("adBlock", v).apply()
+    }
+
+    fun loadAdBlockPref() {
+        val v = appContext.getSharedPreferences("browser_settings", android.content.Context.MODE_PRIVATE)
+            .getBoolean("adBlock", false)
+        adBlocker.setEnabled(v)
+    }
+
+    /** 阅读模式：当前页提取正文（BR-021）。 */
+    fun openReaderMode() {
+        val w = webViews.peek(currentTabId ?: return) ?: return
+        w.evaluateJavascript(ReaderModeJs.EXTRACT) { raw ->
+            readerResult = ReaderModeJs.Result.fromJson(raw ?: "null")
+        }
+    }
+
+    fun closeReaderMode() {
+        readerResult = null
     }
 
     fun applyNightMode(enabled: Boolean) {

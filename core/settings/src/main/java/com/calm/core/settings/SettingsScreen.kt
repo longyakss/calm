@@ -36,9 +36,13 @@ private val sections = listOf(
     SettingsSection("系统", listOf("防杀设置（后台保护）", "自动更新", "关于")),
 )
 
-/** 设置页（对应设计方案 5.15）。主题色与外观模式已实装（TH-001/TH-004），其余分区随后续 Phase 接通。 */
+/** 设置页（对应设计方案 5.15）。已实装：主题色/外观模式/防杀/阅读器设置/播放器提示。 */
 @Composable
-fun SettingsScreen(onThemeChanged: (Int, Int) -> Unit = { _, _ -> }) {
+fun SettingsScreen(
+    onThemeChanged: (Int, Int) -> Unit = { _, _ -> },
+    onOpenKeepAlive: () -> Unit = {},
+    onOpenReaderSettings: () -> Unit = {},
+) {
     var presetIdx by remember { mutableIntStateOf(ThemeStore.presetIndex) }
     var appearance by remember { mutableIntStateOf(ThemeStore.appearance) }
 
@@ -126,11 +130,20 @@ fun SettingsScreen(onThemeChanged: (Int, Int) -> Unit = { _, _ -> }) {
                 )
             }
             items(section.items) { label ->
+                val clickable = label.startsWith("防杀") || label == "阅读器设置"
                 Text(
-                    text = label,
+                    text = label + if (clickable) "  ›" else "",
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .then(
+                            if (clickable) Modifier.clickable {
+                                when {
+                                    label.startsWith("防杀") -> onOpenKeepAlive()
+                                    label == "阅读器设置" -> onOpenReaderSettings()
+                                }
+                            } else Modifier,
+                        )
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                 )
                 androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.outlineVariant)

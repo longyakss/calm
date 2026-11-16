@@ -108,7 +108,19 @@ fun CalmRoot(onThemeChanged: (Int, Int) -> Unit) {
             }
 
             composable("settings") {
-                SettingsScreen(onThemeChanged = onThemeChanged)
+                SettingsScreen(
+                    onThemeChanged = onThemeChanged,
+                    onOpenKeepAlive = { navController.navigate("keepalive") },
+                    onOpenReaderSettings = { navController.navigate("readersettings") },
+                )
+            }
+            composable("keepalive") {
+                com.calm.core.settings.KeepAliveScreen(onBack = { navController.popBackStack() })
+            }
+            composable("readersettings") {
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                val prefs = androidx.compose.runtime.remember { com.calm.core.reader.ReaderPrefs(ctx) }
+                com.calm.core.reader.ReaderSettingsScreen(prefs = prefs, onBack = { navController.popBackStack() })
             }
             composable("reader/{bookId}") { entry ->
                 val bookId = entry.arguments?.getString("bookId")?.toLongOrNull() ?: return@composable
