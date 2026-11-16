@@ -16,13 +16,14 @@ import javax.inject.Singleton
 @Singleton
 class AdBlocker @Inject constructor() {
 
-    var enabled by mutableStateOf(false)
-        private set
-    var blockedCount by mutableStateOf(0)
-        private set
+    private val enabledState = mutableStateOf(false)
+    private val blockedCountState = mutableStateOf(0)
+
+    val enabled: Boolean get() = enabledState.value
+    val blockedCount: Int get() = blockedCountState.value
 
     fun setEnabled(v: Boolean) {
-        enabled = v
+        enabledState.value = v
     }
 
     private val hosts: Set<String> by lazy { buildSet {
@@ -75,11 +76,11 @@ class AdBlocker @Inject constructor() {
     /** 返回空响应拦截请求；未命中返回 null 走正常加载。 */
     fun intercept(view: WebView, request: WebResourceRequest): WebResourceResponse? {
         if (!shouldBlock(request.url.toString())) return null
-        blockedCount++
+        blockedCountState.value++
         return WebResourceResponse("text/plain", "utf-8", java.io.ByteArrayInputStream(ByteArray(0)))
     }
 
     fun resetCount() {
-        blockedCount = 0
+        blockedCountState.value = 0
     }
 }
