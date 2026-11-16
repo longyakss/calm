@@ -303,16 +303,16 @@ fun PlayerScreen(
 }
 
 private fun windowBrightness(context: android.content.Context): Float {
-    val wm = context.getSystemService(WindowManager::class.java)
-    val lp = wm.attributes ?: return 0.5f
+    val window = (context as? android.app.Activity)?.window ?: return 0.5f
+    val lp = window.attributes
     return if (lp.screenBrightness < 0) 0.5f else lp.screenBrightness
 }
 
 private fun setWindowBrightness(context: android.content.Context, value: Float) {
-    val wm = context.getSystemService(WindowManager::class.java)
-    val lp = wm.attributes ?: return
+    val window = (context as? android.app.Activity)?.window ?: return
+    val lp = window.attributes
     lp.screenBrightness = value
-    wm.attributes = lp
+    window.attributes = lp
 }
 
 fun fmtTime(ms: Long): String {

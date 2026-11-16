@@ -311,7 +311,11 @@ fun BrowserScreen(vm: BrowserViewModel = hiltViewModel(), onOpenSettings: () -> 
             }
             LazyColumn(modifier = Modifier.height(360.dp)) {
                 items(bookmarks, key = { it.id }) { b ->
-                    BookmarkRow(b, onClick = { vm.loadUrl(vm.currentTabId ?: return@items, b.url); sheet = null }) {
+                    BookmarkRow(b, onClick = {
+                        val id = vm.currentTabId
+                        if (id != null) vm.loadUrl(id, b.url)
+                        sheet = null
+                    }) {
                         vm.deleteBookmark(b.id)
                     }
                 }
@@ -340,7 +344,11 @@ fun BrowserScreen(vm: BrowserViewModel = hiltViewModel(), onOpenSettings: () -> 
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { vm.loadUrl(vm.currentTabId ?: return@items, h.url); sheet = null }
+                            .clickable {
+                                val id = vm.currentTabId
+                                if (id != null) vm.loadUrl(id, h.url)
+                                sheet = null
+                            }
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                     ) {
                         Text(h.title, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
