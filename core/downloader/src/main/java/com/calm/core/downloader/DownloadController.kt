@@ -204,7 +204,8 @@ class DownloadController @javax.inject.Inject constructor(
         } catch (e: Exception) {
             try {
                 dao.updateStatus(id, "failed")
-                logStore.log("下载", "失败：${task.fileName} ${e.message ?: "网络错误"}")
+                val failed = dao.get(id)
+                logStore.log("下载", "失败：${failed?.fileName ?: id} ${e.message ?: "网络错误"}")
                 _events.value = "下载失败：${e.message ?: "网络错误"}"
             } catch (_: Exception) {}
         } finally {
