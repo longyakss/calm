@@ -23,7 +23,7 @@ object BookParser {
     fun decode(bytes: ByteArray): String = try {
         String(bytes, Charsets.UTF_8)
     } catch (_: Exception) {
-        String(bytes, Charsets.forName("GBK"))
+        String(bytes, java.nio.charset.Charset.forName("GBK"))
     }
 
     /** txt → 全文 + 章节偏移。无章节标记时按 ~6000 字符切节。 */

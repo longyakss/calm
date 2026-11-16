@@ -62,7 +62,7 @@ class ReaderViewModel @Inject constructor(
             val b = bookDao.get(bookId) ?: return@launch
             book = b
             val target = b.progressChapter.coerceIn(0, (chapterCount - 1).coerceAtLeast(0))
-            loadChapter(target, restoreOffset = b.progressOffset)
+            loadChapter(target, offsetToRestore = b.progressOffset)
             initTts()
         }
     }
@@ -70,10 +70,10 @@ class ReaderViewModel @Inject constructor(
     fun jumpChapter(index: Int) {
         val n = chapterCount
         if (index !in 0 until n) return
-        viewModelScope.launch { loadChapter(index, restoreOffset = 0) }
+        viewModelScope.launch { loadChapter(index, offsetToRestore = 0) }
     }
 
-    private suspend fun loadChapter(target: Int, restoreOffset: Int) {
+    private suspend fun loadChapter(target: Int, offsetToRestore: Int) {
         val b = book ?: return
         loading = true
         val loaded = withContext(Dispatchers.IO) {
@@ -95,10 +95,10 @@ class ReaderViewModel @Inject constructor(
         paragraphs.clear()
         paragraphs.addAll(loaded)
         chapterIndex = target
-        restoreOffset = restoreOffsetArg
+        restoreOffset = offsetToRestore
         loading = false
         // 立即落一次进度
-        bookDao.updateProgress(b.id, target, restoreOffsetArg)
+        bookDao.updateProgress(b.id, target, offsetToRestore)
         if (speakEnabled) speakFrom(0)
     }
 
@@ -126,12 +126,12 @@ class ReaderViewModel @Inject constructor(
         val list = rules() + ReaderPrefs.Rule(System.currentTimeMillis(), find, replace, isRegex, true)
         prefs.saveRules(id, list)
         // 重新渲染当前章节
-        viewModelScope.launch { loadChapter(chapterIndex, restoreOffset = 0) }
+        viewModelScope.launch { loadChapter(chapterIndex, offsetToRestore = 0) }
     }
 
     fun removeRule(rule: ReaderPrefs.Rule) {
         prefs.saveRules(book?.id ?: 0, rules() - rule)
-        viewModelScope.launch { loadChapter(chapterIndex, restoreOffset = 0) }
+        viewModelScope.launch { loadChapter(chapterIndex, offsetToRestore = 0) }
     }
 
     private fun applyRules(input: List<String>): List<String> {
@@ -164,7 +164,7 @@ class ReaderViewModel @Inject constructor(
                                 if (speakEnabled) {
                                     val next = chapterIndex + 1
                                     if (next < chapterCount) {
-                                        viewModelScope.launch { loadChapter(next, restoreOffset = 0) }
+                                        viewModelScope.launch { loadChapter(next, offsetToRestore = 0) }
                                     } else {
                                         speakEnabled = false
                                     }

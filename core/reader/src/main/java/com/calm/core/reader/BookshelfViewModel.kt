@@ -48,8 +48,7 @@ class BookshelfViewModel @Inject constructor(
                         val extractDir = File(booksDir, displayName.substringBeforeLast('.'))
                         val meta = BookParser.openEpub(tmp, extractDir)
                         tmp.delete()
-                        if (meta != null) {
-                            // 生成章节标题（取每个 spine 文件的首个标题）
+                        if (meta != null) {                            // 生成章节标题（取每个 spine 文件的首个标题）
                             val titles = meta.spineFiles.mapIndexed { i, f ->
                                 runCatching {
                                     org.jsoup.Jsoup.parse(File(f), "UTF-8")
@@ -72,6 +71,7 @@ class BookshelfViewModel @Inject constructor(
                                 ),
                             )
                         }
+                        Unit
                     } else {
                         // txt（其它扩展名按 txt 尝试）
                         val local = File(booksDir, displayName)
