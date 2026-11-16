@@ -36,7 +36,7 @@ class BatchImageDownloader @javax.inject.Inject constructor(
     val message: StateFlow<String?> = _message
 
     private fun nameFor(url: String, index: Int): String {
-        val ext = NameUtil.extensionOf(url.substringBefore('?').substringAfterLast('/')) ?: "jpg"
+        val ext = com.calm.core.downloader.NameUtil.extensionOf(url.substringBefore('?').substringAfterLast('/')) ?: "jpg"
         return "%03d.%s".format(index + 1, ext)
     }
 

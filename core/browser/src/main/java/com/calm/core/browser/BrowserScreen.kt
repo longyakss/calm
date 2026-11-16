@@ -510,7 +510,7 @@ fun BrowserScreen(vm: BrowserViewModel = hiltViewModel(), onOpenSettings: () -> 
     // ---- 多图下载问询（BR-011：压缩包 or 文件夹）----
     if (vm.batchAskMode) {
         AlertDialog(
-            onDismissRequest = { vm.batchAskMode = false },
+            onDismissRequest = { vm.dismissBatchAsk() },
             title = { Text("批量下载 ${vm.pickedCount} 张图片") },
             text = { Text("选择保存方式：") },
             confirmButton = {
@@ -543,6 +543,7 @@ fun BrowserScreen(vm: BrowserViewModel = hiltViewModel(), onOpenSettings: () -> 
 }
 
 /** 图片批量选择：点选 + 在图片上滑动批量选择；顶部显示已选数量与下载按钮。 */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ImagePickerOverlay(vm: BrowserViewModel, batchProgress: Pair<Int, Int>?) {
     val scrollState = rememberScrollState()

@@ -320,6 +320,10 @@ class BrowserViewModel @Inject constructor(
         }
     }
 
+    fun dismissBatchAsk() {
+        batchAskMode = false
+    }
+
     fun startImageBatch(asZip: Boolean) {
         batchAskMode = false
         val urls = pickedImages.filter { it in pickedSet }
