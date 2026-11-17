@@ -11,10 +11,17 @@ class CalmApp : Application() {
     @Inject
     lateinit var logStore: LogStore
 
+    @Inject
+    lateinit var githubProxy: com.calm.core.browser.GithubProxyManager
+
     override fun onCreate() {
         super.onCreate()
         // BR-003：启动时清理 24 小时前日志（异步，失败不阻塞）
         logStore.purgeOldLogs()
+        // 恢复上次的 GitHub 直连加速开关（WebView 代理不跨进程存活）
+        if (githubProxy.restoreOnStartup()) {
+            logStore.log("GitHub加速", "启动恢复：本地代理运行于 127.0.0.1:${githubProxy.port}")
+        }
         val versionName = try {
             packageManager.getPackageInfo(packageName, 0).versionName
         } catch (_: Exception) {

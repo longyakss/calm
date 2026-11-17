@@ -2,7 +2,7 @@
 
 > 安卓全能型混合工具箱 —— 浏览器 · 下载器 · 文件管理 · 播放器 · 阅读器，一个 App 五大闭环。
 
-![版本](https://img.shields.io/badge/version-0.2.0-blue) ![Android](https://img.shields.io/badge/Android-7.0%2B-green) ![Kotlin](https://img.shields.io/badge/Kotlin-Compose-orange) ![License](https://img.shields.io/badge/用途-学习研究-important)
+![版本](https://img.shields.io/badge/version-0.3.0-blue) ![Android](https://img.shields.io/badge/Android-7.0%2B-green) ![Kotlin](https://img.shields.io/badge/Kotlin-Compose-orange) ![License](https://img.shields.io/badge/用途-学习研究-important)
 
 > ⚠️ **当前还处于功能验证阶段**：核心功能已在真机可用，但仍在快速迭代中，可能存在不稳定或适配不佳的场景。**1.0 才是首个正式版本**——早期版本号从 0.1 重新计数（此前的 0.5/0.6 为开发期内部编号，已重置），问题反馈请附日志（设置 → 操作日志 → 一键复制）。
 
@@ -24,7 +24,7 @@
 - **广告拦截**：内置 60+ 广告与追踪域名规则，菜单开关，实时计数
 - **阅读模式**：一键提取网页正文（默认首行缩进，保留文章配图）
 - **夜间模式**：页面反色（可调亮度版在路线图中）
-- **GitHub 辅助访问**：raw/releases 等静态资源走镜像加速，设置中可开关与自定义模板
+- **GitHub 辅助访问**（可关闭）：① 本地代理直连——全局接管 WebView，GitHub 域名走优选 IP，HTTPS 端到端不解密，登录/Cookie 正常，非 GitHub 站点透明转发；② 镜像前缀改写——raw/releases/gist/codeload 静态资源走镜像，模板可自定义
 - **站点适配**：B 站等站点自动使用桌面 UA
 - 书签 / 历史记录、起始页常用网址 + 主页书签 + 最近访问
 
@@ -64,7 +64,8 @@
 ## 🗺️ 开发路线
 
 - [x] 0.1.x 工程骨架 + 五大模块主功能 + 广告拦截/阅读模式/防杀设置（内部编号已重置）
-- [x] 0.2.0 工具栏重做 / 图片批量下载 / 书签弹窗 / 日志系统 / GitHub 辅助 / 下载位置修复 / 文件打开崩溃修复
+- [x] 0.2.0 工具栏重做 / 图片批量下载 / 书签弹窗 / 日志系统 / 下载位置修复 / 文件打开崩溃修复
+- [x] 0.3.0 GitHub 双通道加速：本地代理直连（免镜像、优选 IP、可关闭）+ 镜像改写
 - [ ] 夜间模式可调（亮度/对比度滑块）
 - [ ] 翻译模块（在线 + 本地选装）
 - [ ] 密码管理器（AES-256-GCM + Keystore）

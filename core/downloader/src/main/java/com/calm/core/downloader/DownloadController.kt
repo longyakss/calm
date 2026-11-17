@@ -60,6 +60,8 @@ class DownloadController @javax.inject.Inject constructor(
         .readTimeout(60, TimeUnit.SECONDS)
         .writeTimeout(60, TimeUnit.SECONDS)
         .retryOnConnectionFailure(true)
+        // GitHub 域名 DNS 纠偏（优选 IP）；其余域名与系统一致
+        .dns(GithubDns())
         .build()
 
     private val jobs = ConcurrentHashMap<String, Job>()

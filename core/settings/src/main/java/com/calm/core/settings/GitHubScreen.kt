@@ -36,13 +36,16 @@ import javax.inject.Inject
 @HiltViewModel
 class GitHubViewModel @Inject constructor(
     val helper: GitHubHelper,
+    val proxy: com.calm.core.browser.GithubProxyManager,
 ) : ViewModel()
 
-/** GitHub 辅助访问设置（BR-028）：开关 + 镜像模板。 */
+/** GitHub 辅助访问设置（BR-028）：两种独立加速方式 + 均可关闭。 */
 @Composable
 fun GitHubScreen(onBack: () -> Unit, vm: GitHubViewModel = hiltViewModel()) {
     var enabled by remember { mutableStateOf(vm.helper.enabled) }
     var template by remember { mutableStateOf(vm.helper.template) }
+    var directOn by remember { mutableStateOf(vm.proxy.prefEnabled) }
+    var directRunning by remember { mutableStateOf(vm.proxy.isRunning) }
 
     Column(
         modifier = Modifier
@@ -60,15 +63,37 @@ fun GitHubScreen(onBack: () -> Unit, vm: GitHubViewModel = hiltViewModel()) {
         }
 
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+
+            // ---- 方式一：本地代理直连（免镜像） ----
+            Text("方式一 · 本地代理直连（免镜像，实验）", style = MaterialTheme.typography.titleSmall)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("启用加速（默认关闭）", modifier = Modifier.weight(1f))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("全局接管 WebView 流量走本地代理")
+                    Text(
+                        if (directOn && directRunning) "运行中 · 127.0.0.1:${vm.proxy.port}" else "已关闭",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(checked = directOn, onCheckedChange = {
+                    val ok = if (it) vm.proxy.enable() else { vm.proxy.disable(); true }
+                    directOn = ok && it
+                    directRunning = vm.proxy.isRunning
+                })
+            }
+
+            // ---- 方式二：镜像改写 ----
+            Spacer(Modifier.height(12.dp))
+            Text("方式二 · 镜像前缀改写", style = MaterialTheme.typography.titleSmall)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("启用（默认关闭）", modifier = Modifier.weight(1f))
                 Switch(checked = enabled, onCheckedChange = {
                     enabled = it
                     vm.helper.enabled = it
                 })
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(8.dp))
             OutlinedTextField(
                 value = template,
                 onValueChange = { template = it },
@@ -89,15 +114,12 @@ fun GitHubScreen(onBack: () -> Unit, vm: GitHubViewModel = hiltViewModel()) {
                     Text("说明", style = MaterialTheme.typography.titleSmall)
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "仅加速以下 GitHub 静态资源（不影响登录等主站功能）：\n" +
-                            "· raw.githubusercontent.com\n" +
-                            "· gist.githubusercontent.com\n" +
-                            "· codeload.github.com（源码打包）\n" +
-                            "· Releases 附件下载\n" +
-                            "· 页面 raw/blob 文件链接\n\n" +
-                            "镜像前缀会在原地址前拼接，例如：\n" +
-                            "https://ghfast.top/https://raw.githubusercontent.com/...\n\n" +
-                            "镜像站可用性随时可能变化，如加速失败请更换模板或关闭开关。此功能为非官方能力。",
+                        "方式一：本地透明代理 + GitHub 优选 IP 直连。不拆解 HTTPS，登录/Cookie 正常；" +
+                            "非 GitHub 网站经代理透传不受影响；失败可随时关闭。\n\n" +
+                            "方式二：仅改写 GitHub 静态资源链接（raw/gist/codeload/Releases）走镜像前缀，" +
+                            "例如 https://ghfast.top/https://raw.githubusercontent.com/...；" +
+                            "镜像站可用性随时变化，失败请换模板或关闭。\n\n" +
+                            "两种方式可叠加使用（不推荐），均为非官方加速。",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
